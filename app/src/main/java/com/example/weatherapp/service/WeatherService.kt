@@ -15,10 +15,7 @@ interface WeatherService {
     suspend fun getGeoCordsByCityName(@Query("q") cityName: String, @Query("appid") apiKey: String = Constants.API_KEY): List<City>
 
     @GET("/data/2.5/weather")
-    suspend fun getWeatherInfoByCity(@Query("lat") lat: Float, @Query("lon") lon: Float, @Query("appid") apiKey: String = Constants.API_KEY): CityWeatherInfo
-
-    @GET("/img/wn/{icon}@2x.png")
-    suspend fun getWeatherIcon(@Path("icon") icon: String)
+    suspend fun getWeatherInfoByCity(@Query("lat") lat: Double, @Query("lon") lon: Double, @Query("appid") apiKey: String = Constants.API_KEY): CityWeatherInfo
 
     companion object {
         val BASE_URL = "https://api.openweathermap.org"

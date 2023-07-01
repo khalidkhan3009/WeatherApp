@@ -2,9 +2,14 @@
 
 package com.example.weatherapp
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,15 +45,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.weatherapp.constant.Constants
+import com.example.weatherapp.extensions.getDescription
+import com.example.weatherapp.extensions.getFeelsLike
+import com.example.weatherapp.extensions.getMaxTemp
+import com.example.weatherapp.extensions.getMinTemp
 import com.example.weatherapp.extensions.getStateOrEmpty
+import com.example.weatherapp.extensions.getTemperature
 import com.example.weatherapp.extensions.toCelsius
+import com.example.weatherapp.model.City
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import com.example.weatherapp.viewmodel.WeatherViewModel
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 class SearchActivity : ComponentActivity() {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    val viewModel: WeatherViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -58,6 +75,29 @@ class SearchActivity : ComponentActivity() {
                     CityWeather()
                 }
             }
+        }
+        requestLocationPermission()
+        requestLastKnownLocation()
+    }
+
+    private fun requestLocationPermission() {
+        val locationPermissionRequest = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            when {
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED -> {
+                    Log.d("WeatherApp", "${Manifest.permission.ACCESS_COARSE_LOCATION} Permission Granted")
+                    requestLastKnownLocation()
+                }
+            }
+        }
+        locationPermissionRequest.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+    }
+
+    private fun requestLastKnownLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) { return }
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fusedLocationClient.lastLocation.addOnSuccessListener {
+            viewModel.getWeatherInfoByCity(City("", it.latitude, it.longitude, "", ""), true)
+            Log.d("WeatherApp", "Latitude: ${it.latitude} Longitude: ${it.longitude}")
         }
     }
 }
@@ -76,7 +116,7 @@ fun CityWeather(modifier: Modifier = Modifier) {
 
 @Composable
 fun SearchBar(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
-    var inputVal by rememberSaveable { mutableStateOf("London") }
+    var inputVal by rememberSaveable { mutableStateOf("") }
     TextField(
         value = inputVal,
         placeholder = { Text(text = "Search City, Zipcode.....") },
@@ -105,11 +145,11 @@ fun SearchSection(viewModel: WeatherViewModel) {
                 fontSize = 16.sp,
                 modifier = Modifier
                     .padding(all = 10.dp)
-                    .clickable { viewModel.getWeatherInfoByCity(city) }
+                    .clickable { viewModel.getWeatherInfoByCity(city, false) }
             )
         }
     }
-    Divider(color = Color.Black, thickness = 2.dp, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
+    Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
 }
 
 
@@ -117,28 +157,37 @@ fun SearchSection(viewModel: WeatherViewModel) {
 fun WeatherInformation(viewModel: WeatherViewModel, modifier: Modifier) {
     val cityWeatherInfo by viewModel.cityWeatherInfo.collectAsState()
     Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, ) {
-            Text(
-                text = cityWeatherInfo.name,
-                fontSize = 24.sp
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = cityWeatherInfo.name,
+                    fontSize = 32.sp
+                )
+                Text(text = "Description: ${cityWeatherInfo.getDescription()}")
+            }
 
             AsyncImage(
                 model = viewModel.getWeatherIcon(cityWeatherInfo),
                 contentDescription = "Cloudy",
-                modifier = Modifier.width(100.dp).height(100.dp)
+                modifier = Modifier
+                    .width(100.dp)
+                    .height(100.dp)
             )
         }
         Spacer(modifier.height(16.dp))
-        Text(text = "Temperature: ${cityWeatherInfo.main[Constants.TEMP]?.toCelsius()}")
+        Text(text = "Temperature: ${cityWeatherInfo.getTemperature()}")
         Spacer(modifier.height(16.dp))
-        Text(text = "Feels Like: ${cityWeatherInfo.main[Constants.FEELS_LIKE]?.toCelsius()}")
-        //Text(text = "Description: ${cityWeatherInfo.weather[0].description}")
+        Text(text = "Feels Like: ${cityWeatherInfo.getFeelsLike()}")
+
         Spacer(modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.SpaceEvenly) {
-            Text(text = "Min: ${cityWeatherInfo.main[Constants.MIN_TEMP]?.toCelsius()}")
+            Text(text = "Min: ${cityWeatherInfo.getMinTemp()}")
             Spacer(modifier = Modifier.width(16.dp))
-            Text(text = "Max: ${cityWeatherInfo.main[Constants.MAX_TEMP]?.toCelsius()}")
+            Text(text = "Max: ${cityWeatherInfo.getMaxTemp()}")
         }
     }
 }

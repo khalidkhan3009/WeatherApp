@@ -5,9 +5,9 @@ import org.json.JSONObject
 
 data class CityWeatherInfo(
     //val coord: JSONObject,
-    val weather: List<Weather> = listOf(),
+    val weather: List<Weather> = emptyList(),
     //val base: String,
-    val main: Map<String, Float> = hashMapOf(),
+    val main: Map<String, Double> = hashMapOf(),
     //val visibility: Long
     /*    val wind: JSONObject,
         val clouds: JSONObject,

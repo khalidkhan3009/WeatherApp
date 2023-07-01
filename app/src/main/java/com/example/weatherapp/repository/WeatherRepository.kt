@@ -12,13 +12,12 @@ class WeatherRepository {
 
     suspend fun getWeatherInfoByCity(city: City): CityWeatherInfo {
         return weatherService.getWeatherInfoByCity(city.lat, city.lon)
-
     }
 
     fun getWeatherIcon(cityWeatherInfo: CityWeatherInfo): String {
         val weatherList = cityWeatherInfo.weather
         return if(weatherList.isNotEmpty()){
-            "https://openweathermap.org/img/wn/${weatherList[0].icon}@2x.png"
+            "https://openweathermap.org/img/wn/${weatherList[0].icon}@4x.png"
         } else {
             ""
         }
