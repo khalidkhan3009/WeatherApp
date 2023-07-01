@@ -1,5 +1,6 @@
 package com.example.weatherapp.repository
 
+import com.example.weatherapp.constant.Constants
 import com.example.weatherapp.model.City
 import com.example.weatherapp.model.CityWeatherInfo
 import com.example.weatherapp.service.WeatherService
@@ -16,10 +17,8 @@ class WeatherRepository {
 
     fun getWeatherIcon(cityWeatherInfo: CityWeatherInfo): String {
         val weatherList = cityWeatherInfo.weather
-        return if(weatherList.isNotEmpty()){
-            "https://openweathermap.org/img/wn/${weatherList[0].icon}@4x.png"
-        } else {
-            ""
-        }
+        return if(weatherList.isNotEmpty())
+            Constants.ICON_URL.replace("icon", weatherList[0].icon)
+        else ""
     }
 }

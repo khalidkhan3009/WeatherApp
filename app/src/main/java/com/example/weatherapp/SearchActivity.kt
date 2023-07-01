@@ -149,37 +149,47 @@ fun SearchSection(viewModel: WeatherViewModel) {
             )
         }
     }
-    Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
+    if(cityList.isNotEmpty()){
+        Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(start = 16.dp, end = 16.dp))
+    }
 }
 
 
 @Composable
 fun WeatherInformation(viewModel: WeatherViewModel, modifier: Modifier) {
     val cityWeatherInfo by viewModel.cityWeatherInfo.collectAsState()
-    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp)) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = cityWeatherInfo.name,
-                    fontSize = 32.sp
-                )
-                Text(text = "Description: ${cityWeatherInfo.getDescription()}")
-            }
-
             AsyncImage(
                 model = viewModel.getWeatherIcon(cityWeatherInfo),
-                contentDescription = "Cloudy",
+                contentDescription = cityWeatherInfo.getDescription(),
                 modifier = Modifier
                     .width(100.dp)
                     .height(100.dp)
             )
+            Text(
+                text = "${cityWeatherInfo.getTemperature()}",
+                fontSize = 32.sp,
+            )
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = cityWeatherInfo.name,
+                fontSize = 32.sp
+            )
+            Text(text = cityWeatherInfo.getDescription())
         }
         Spacer(modifier.height(16.dp))
-        Text(text = "Temperature: ${cityWeatherInfo.getTemperature()}")
         Spacer(modifier.height(16.dp))
         Text(text = "Feels Like: ${cityWeatherInfo.getFeelsLike()}")
 

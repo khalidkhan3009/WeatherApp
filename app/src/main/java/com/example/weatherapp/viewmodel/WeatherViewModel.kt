@@ -12,16 +12,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class WeatherViewModel : ViewModel() {
-    //City List State
+    //State to handle the list of cities
     private val _cityListState = MutableStateFlow<List<City>>(mutableListOf())
     val cityList = _cityListState.asStateFlow()
 
-    //City Weather State
+    //State to handle City Weather Info
     private val _cityWeatherInfo = MutableStateFlow(CityWeatherInfo())
     val cityWeatherInfo = _cityWeatherInfo.asStateFlow()
 
+    //History List to store the cities which are already searched
     private val historyList by lazy { mutableStateListOf<City>() }
 
+    /*
+    * Take the string input and update the list of cities or recently searched city list
+    * */
     fun updateListOfCities(inputVal: String) {
         viewModelScope.launch {
             if (inputVal.isNotEmpty()) {
@@ -33,6 +37,9 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
+    /*
+    * Take the selected City info and fetch the Weather Information for that City
+    * */
     fun getWeatherInfoByCity(city: City, isCurrentLocation: Boolean) {
         if(!isCurrentLocation) historyList.add(city)
         viewModelScope.launch {
@@ -41,6 +48,8 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
+    /*
+    * Get the Weather icon for the selected City*/
     fun getWeatherIcon(cityWeatherInfo: CityWeatherInfo): String {
         return WeatherRepository().getWeatherIcon(cityWeatherInfo)
     }
